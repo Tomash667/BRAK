@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="1. Core">
+      <UniqueIdentifier>{7b548098-d412-43d6-a374-1daa91c9d3b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="2. Engine">
+      <UniqueIdentifier>{4036ed2d-0a0c-4f1f-97dd-662588b9dea3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3. Game">
+      <UniqueIdentifier>{13094598-da06-456d-863a-996992b4c534}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Engine\Scene.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\SceneNode.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Game.h">
+      <Filter>3. Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Engine.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Window.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\ResourceManager.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Mesh.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Resource.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Camera.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Pch.h" />
+    <ClInclude Include="Engine\Render.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Core.h">
+      <Filter>1. Core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Game\Game.cpp">
+      <Filter>3. Game</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
