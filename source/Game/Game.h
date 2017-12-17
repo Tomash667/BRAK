@@ -5,14 +5,16 @@
 class Game
 {
 public:
-	void Run();
+	bool Run();
 
 private:
-	void Init();
+	bool Init();
 	void Loop();
+	void Shutdown();
 
 	Window* window;
 	Render* render;
 	Scene* scene;
 	ResourceManager* res_mgr;
+	InputManager* input;
 };

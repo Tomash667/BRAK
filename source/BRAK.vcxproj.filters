@@ -46,11 +46,50 @@
     <ClInclude Include="Core\Core.h">
       <Filter>1. Core</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\InputManager.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Key.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\CoreMath.h">
+      <Filter>1. Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Text.h">
+      <Filter>1. Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Texture.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Game\Game.cpp">
       <Filter>3. Game</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Window.cpp">
+      <Filter>2. Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Render.cpp">
+      <Filter>2. Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Scene.cpp">
+      <Filter>2. Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\ResourceManager.cpp">
+      <Filter>2. Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\InputManager.cpp">
+      <Filter>2. Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Pch.cpp" />
+    <ClCompile Include="Core\Text.cpp">
+      <Filter>1. Core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Core\CoreMath.inl">
+      <Filter>1. Core</Filter>
+    </None>
   </ItemGroup>
 </Project>

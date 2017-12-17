@@ -1,7 +1,9 @@
 #pragma once
 
+class InputManager;
 class Render;
 class ResourceManager;
 class Scene;
-class SceneNode;
 class Window;
+
+struct SceneNode;
