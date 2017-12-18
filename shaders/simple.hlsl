@@ -23,6 +23,5 @@ VS_OUTPUT vs_simple(VS_INPUT In)
 
 float4 ps_simple() : SV_TARGET
 {
-	return float4(1,0,0,1);
-	//return color;
+	return color;
 }

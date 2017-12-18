@@ -181,7 +181,7 @@ void Render::CreateDepthStencilView()
 
 	// Create the texture for the depth buffer using the filled out description.
 	ID3D11Texture2D* m_depthStencilBuffer;
-	result = device->CreateTexture2D(&depthBufferDesc, NULL, &m_depthStencilBuffer);
+	result = device->CreateTexture2D(&depthBufferDesc, nullptr, &m_depthStencilBuffer);
 	if(FAILED(result))
 		throw Format("Failed to create depth buffer texture (%u).", result);
 
@@ -375,7 +375,7 @@ void Render::Draw()
 	float color[4];
 
 	static float r = 0.f;
-	r += 0.001f;
+	r += 0.0001f;
 
 	// Setup the color to clear the buffer to.
 	color[0] = 0;
@@ -384,21 +384,21 @@ void Render::Draw()
 	color[3] = 1;
 
 	// Clear the back buffer.
-	context->ClearRenderTargetView(render_target, color);
+ 	context->ClearRenderTargetView(render_target, color);
 	context->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.f, 0);
+	// D3D11_CLEAR_STENCIL
 
-
-	Matrix matWorld = Matrix::RotationY(r).Transpose(),
-		matView = Matrix::CreatePerspectiveFieldOfView(PI / 4, 1024.f / 768.f, 0.1f, 100.f).Transpose(),
-		matProj = Matrix::CreateLookAt(Vec3(0, 0, -3), Vec3(0, 0, 0), Vec3(0, 1, 0)).Transpose();
+	Matrix matWorld = Matrix::RotationY(r),
+		matProj = Matrix::CreatePerspectiveFieldOfView(PI / 4, 1024.f / 768.f, 0.1f, 100.f),
+		matView = Matrix::CreateLookAt(Vec3(0, 0, -3), Vec3(0, 0, 0), Vec3(0, 1, 0));
 	// transpose ???
 
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	HRESULT result = context->Map(globals, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	Globals& g = *(Globals*)mappedResource.pData;
-	g.matWorldViewProj = matWorld * matView * matProj;
-	g.color = Vec4(1, 0, 0, 1);
+	g.matWorldViewProj = (matWorld * matView * matProj).Transpose();
+	g.color = Vec4(1, 0.3f, 0, 1);
 	context->Unmap(globals, 0);
 
 	context->VSSetConstantBuffers(0, 1, &globals);
