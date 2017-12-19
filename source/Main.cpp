@@ -2,6 +2,8 @@
 #include "Core.h"
 #include "Game.h"
 
+#include "File.h"
+
 int main()
 {
 	Game* game = new Game;

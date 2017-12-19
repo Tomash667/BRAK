@@ -1,13 +1,14 @@
 #include "Pch.h"
 #include "Core.h"
 #include "Window.h"
+#include "InputManager.h"
 #include <Windows.h>
 
 #undef RegisterClass
 
-Window::Window() : hwnd(nullptr), size(1024, 768), title("Window")
+Window::Window(InputManager* input) : hwnd(nullptr), size(1024, 768), title("Window"), input(input)
 {
-
+	assert(input);
 }
 
 void Window::Init()
@@ -101,14 +102,22 @@ void Window::Center()
 		real_size.x, real_size.y, false);
 }
 
-IntPointer Window::HandleEvents(uint msg, UIntPointer lParam, IntPointer wParam)
+IntPointer Window::HandleEvents(uint msg, IntPointer wParam, UIntPointer lParam)
 {
 	switch(msg)
 	{
 	case WM_CLOSE:
 		PostQuitMessage(0);
 		return 0;
+	case WM_SYSKEYDOWN:
+	case WM_KEYDOWN:
+		input->Process((Key)wParam, true);
+		return 0;
+	case WM_SYSKEYUP:
+	case WM_KEYUP:
+		input->Process((Key)wParam, false);
+		return 0;
 	default:
-		return DefWindowProc((HWND)hwnd, msg, lParam, wParam);
+		return DefWindowProc((HWND)hwnd, msg, wParam, lParam);
 	}
 }

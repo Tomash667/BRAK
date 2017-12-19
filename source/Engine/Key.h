@@ -2,5 +2,6 @@
 
 enum class Key
 {
-	Escape
+	Escape = 0x1B,
+	PrintScreen = 0x2C
 };

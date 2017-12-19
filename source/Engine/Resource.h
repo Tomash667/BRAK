@@ -9,5 +9,7 @@ struct Resource
 	};
 
 	Type type;
-	string path;
+	string name;
+
+	virtual ~Resource() {}
 };

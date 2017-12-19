@@ -22,6 +22,8 @@ public:
 	~Render();
 	void Init();
 	void Draw();
+	ID3D11Device* GetDevice() { return device; }
+	ID3D11DeviceContext* GetContext() { return context; }
 
 private:
 	void CreateDeviceAndSwapChain();

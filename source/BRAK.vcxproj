@@ -96,6 +96,7 @@
       <AdditionalIncludeDirectories>.;Core/;Engine/;Game/;External/DirectXMath/Inc;$(WindowsSDK_IncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x86);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -110,6 +111,7 @@
       <AdditionalIncludeDirectories>.;Core/;Engine/;Game/;External/DirectXMath/Inc;$(WindowsSDK_IncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(WindowsSDK_LibraryPath_x64);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -127,6 +129,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -146,6 +149,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -156,11 +160,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Core\CoreMath.cpp" />
+    <ClCompile Include="Core\File.cpp" />
     <ClCompile Include="Core\Text.cpp" />
     <ClCompile Include="Engine\InputManager.cpp" />
+    <ClCompile Include="Engine\QmshLoader.cpp" />
     <ClCompile Include="Engine\Render.cpp" />
     <ClCompile Include="Engine\ResourceManager.cpp" />
     <ClCompile Include="Engine\Scene.cpp" />
+    <ClCompile Include="Engine\WICTextureLoader.cpp" />
     <ClCompile Include="Engine\Window.cpp" />
     <ClCompile Include="Game\Game.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -174,18 +181,21 @@
   <ItemGroup>
     <ClInclude Include="Core\Core.h" />
     <ClInclude Include="Core\CoreMath.h" />
+    <ClInclude Include="Core\File.h" />
     <ClInclude Include="Core\Text.h" />
     <ClInclude Include="Engine\Camera.h" />
     <ClInclude Include="Engine\Engine.h" />
     <ClInclude Include="Engine\InputManager.h" />
     <ClInclude Include="Engine\Key.h" />
     <ClInclude Include="Engine\Mesh.h" />
+    <ClInclude Include="Engine\QmshLoader.h" />
     <ClInclude Include="Engine\Render.h" />
     <ClInclude Include="Engine\Resource.h" />
     <ClInclude Include="Engine\ResourceManager.h" />
     <ClInclude Include="Engine\Scene.h" />
     <ClInclude Include="Engine\SceneNode.h" />
     <ClInclude Include="Engine\Texture.h" />
+    <ClInclude Include="Engine\WICTextureLoader.h" />
     <ClInclude Include="Engine\Window.h" />
     <ClInclude Include="Game\Game.h" />
     <ClInclude Include="Pch.h" />

@@ -24,14 +24,17 @@ bool Game::Init()
 {
 	try
 	{
-		window = new Window;
+		input = new InputManager;
+
+		window = new Window(input);
 		window->SetTitle("BRAK");
 		window->Init();
+
 		render = new Render(window);
 		render->Init();
+
 		scene = new Scene(render);
-		res_mgr = new ResourceManager;
-		input = new InputManager;
+		res_mgr = new ResourceManager(render);
 
 		auto node = new SceneNode;
 		node->mesh = res_mgr->GetMesh("cube.qmsh");
@@ -60,6 +63,7 @@ void Game::Loop()
 		if(input->Down(Key::Escape))
 			break;
 		render->Draw();
+		input->Update();
 	}
 }
 
