@@ -391,9 +391,6 @@ void Render::Draw()
 	Matrix matWorld = Matrix::RotationY(r),
 		matProj = Matrix::CreatePerspectiveFieldOfView(PI / 4, 1024.f / 768.f, 0.1f, 100.f),
 		matView = Matrix::CreateLookAt(Vec3(0, 0, -3), Vec3(0, 0, 0), Vec3(0, 1, 0));
-	// transpose ???
-
-	HANDLE
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	HRESULT result = context->Map(globals, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);

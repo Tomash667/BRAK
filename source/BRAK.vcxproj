@@ -163,6 +163,7 @@
     <ClCompile Include="Core\File.cpp" />
     <ClCompile Include="Core\Text.cpp" />
     <ClCompile Include="Engine\InputManager.cpp" />
+    <ClCompile Include="Engine\Mesh.cpp" />
     <ClCompile Include="Engine\QmshLoader.cpp" />
     <ClCompile Include="Engine\Render.cpp" />
     <ClCompile Include="Engine\ResourceManager.cpp" />

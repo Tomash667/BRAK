@@ -3,6 +3,14 @@
 #include "Resource.h"
 
 struct ID3D11Buffer;
+struct Texture;
+
+struct Vertex
+{
+	Vec3 pos;
+	Vec3 normal;
+	Vec2 tex;
+};
 
 struct Mesh : Resource
 {
@@ -32,8 +40,8 @@ struct Mesh : Resource
 		word tris; // ile trójk¹tów narysowaæ
 		word min_ind; // odpowiednik parametru DrawIndexedPrimitive - MinIndex (tylko wyra¿ony w trójk¹tach)
 		word n_ind; // odpowiednik parametru DrawIndexedPrimitive - NumVertices (tylko wyra¿ony w trójk¹tach)
-		string name;//, normal_name, specular_name;
-		TexturePtr tex, tex_normal, tex_specular;
+		string name;
+		::Texture* tex, *tex_normal, *tex_specular;
 		Vec3 specular_color;
 		float specular_intensity;
 		int specular_hardness;
@@ -111,6 +119,9 @@ struct Mesh : Resource
 		bool IsSphere() const { return type == SPHERE; }
 		bool IsBox() const { return type == Box; }
 	};
+
+	Mesh();
+	~Mesh();
 
 	Header head;
 	ID3D11Buffer* vb;

@@ -21,7 +21,7 @@ ResourceManager::~ResourceManager()
 
 void ResourceManager::Init()
 {
-	qmsh_loader = new QmshLoader(this);
+	qmsh_loader = new QmshLoader(this, render->GetDevice(), render->GetContext());
 }
 
 Mesh* ResourceManager::GetMesh(const string& id)

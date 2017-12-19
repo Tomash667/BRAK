@@ -25,6 +25,10 @@ public:
 
 	bool Open(cstring filename);
 	bool Read(void* ptr, uint size);
+	void ReadToString(string& s);
+	void Skip(uint size);
+	bool Ensure(uint size);
+	uint GetSize() const;
 
 	bool IsOpen() const
 	{
@@ -66,7 +70,7 @@ public:
 		return true;
 	}
 
-	bool ReadStringBUF()
+	/*bool ReadStringBUF()
 	{
 		byte len = Read<byte>();
 		if(len == 0)
@@ -79,17 +83,12 @@ public:
 			BUF[len] = 0;
 			return Read(BUF, len);
 		}
-	}
+	}*/
 
 	template<typename T>
 	void Skip()
 	{
-		SetFilePointer(file, sizeof(T), nullptr, FILE_CURRENT);
-	}
-
-	void Skip(int bytes)
-	{
-		SetFilePointer(file, bytes, nullptr, FILE_CURRENT);
+		Skip(sizeof(T));
 	}
 
 	bool ReadString1(string& s)
@@ -115,14 +114,6 @@ public:
 		return ReadString1(s);
 	}
 
-	void ReadToString(string& s)
-	{
-		DWORD size = GetFileSize(file, nullptr);
-		s.resize(size);
-		ReadFile(file, (char*)s.c_str(), size, &tmp, nullptr);
-		assert(size == tmp);
-	}
-
 	template<typename T>
 	void ReadVector1(vector<T>& v)
 	{
@@ -143,11 +134,7 @@ public:
 			Read(&v[0], sizeof(T)*count);
 	}
 
-	uint GetSize() const
-	{
-		return GetFileSize(file, nullptr);
-	}
-
+private:
 	HANDLE file;
 	bool own_handle;
 };
@@ -169,31 +156,21 @@ public:
 		Open(filename);
 	}
 
-	~FileWriter()
-	{
-		if(own_handle && file != INVALID_HANDLE_VALUE)
-		{
-			CloseHandle(file);
-			file = INVALID_HANDLE_VALUE;
-		}
-	}
+	~FileWriter();
 
-	bool Open(cstring filename)
-	{
-		assert(filename);
-		file = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-		return (file != INVALID_HANDLE_VALUE);
-	}
+	bool Open(cstring filename);
+	void Write(const void* ptr, uint size);
+	void Flush();
+	uint GetSize() const;
 
 	bool IsOpen() const
 	{
 		return file != INVALID_HANDLE_VALUE;
 	}
 
-	void Write(const void* ptr, uint size)
+	operator bool() const
 	{
-		WriteFile(file, ptr, size, &tmp, nullptr);
-		assert(size == tmp);
+		return file != INVALID_HANDLE_VALUE;
 	}
 
 	template<typename T>
@@ -216,7 +193,7 @@ public:
 
 	void WriteString1(const string& s)
 	{
-		int length = s.length();
+		uint length = (uint)s.length();
 		assert(length < 256);
 		WriteCasted<byte>(length);
 		if(length)
@@ -226,7 +203,7 @@ public:
 	void WriteString1(cstring str)
 	{
 		assert(str);
-		int length = strlen(str);
+		uint length = (uint)strlen(str);
 		assert(length < 256);
 		WriteCasted<byte>(length);
 		if(length)
@@ -235,7 +212,7 @@ public:
 
 	void WriteString2(const string& s)
 	{
-		int length = s.length();
+		uint length = (uint)s.length();
 		assert(length < 256 * 256);
 		WriteCasted<word>(length);
 		if(length)
@@ -245,7 +222,7 @@ public:
 	void WriteString2(cstring str)
 	{
 		assert(str);
-		int length = strlen(str);
+		uint length = (uint)strlen(str);
 		assert(length < 256 * 256);
 		Write<word>(length);
 		if(length)
@@ -261,11 +238,6 @@ public:
 	{
 		assert(str);
 		WriteString1(str);
-	}
-
-	operator bool() const
-	{
-		return file != INVALID_HANDLE_VALUE;
 	}
 
 	void Write0()
@@ -289,16 +261,7 @@ public:
 			Write(&v[0], sizeof(T)*v.size());
 	}
 
-	void Flush()
-	{
-		FlushFileBuffers(file);
-	}
-
-	uint GetSize() const
-	{
-		return GetFileSize(file, nullptr);
-	}
-
+private:
 	HANDLE file;
 	bool own_handle;
 };

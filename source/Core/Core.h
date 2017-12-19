@@ -1,6 +1,28 @@
 #pragma once
 
 //-----------------------------------------------------------------------------
+#define BIT(bit) (1<<(bit))
+#define IS_SET(flaga,bit) (((flaga) & (bit)) != 0)
+#define IS_CLEAR(flaga,bit) (((flaga) & (bit)) == 0)
+#define IS_ALL_SET(flaga,bity) (((flaga) & (bity)) == (bity))
+#define SET_BIT(flaga,bit) ((flaga) |= (bit))
+#define CLEAR_BIT(flaga,bit) ((flaga) &= ~(bit))
+#define SET_BIT_VALUE(flaga,bit,wartos) { if(wartos) SET_BIT(flaga,bit); else CLEAR_BIT(flaga,bit); }
+#define COPY_BIT(flaga,flaga2,bit) { if(((flaga2) & (bit)) != 0) SET_BIT(flaga,bit); else CLEAR_BIT(flaga,bit); }
+#define FLT10(x) (float(int((x)*10))/10)
+#define FLT100(x) (float(int((x)*100))/100)
+// makro na rozmiar tablicy
+template <typename T, size_t N>
+char(&_ArraySizeHelper(T(&array)[N]))[N];
+#define countof(array) (sizeof(_ArraySizeHelper(array)))
+#ifndef STRING
+#	define _STRING(str) #str
+#	define STRING(str) _STRING(str)
+#endif
+#define _JOIN(a,b) a##b
+#define JOIN(a,b) _JOIN(a,b)
+
+//-----------------------------------------------------------------------------
 // typedefs
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -133,4 +155,5 @@ private:
 
 //-----------------------------------------------------------------------------
 #include "CoreMath.h"
+#include "File.h"
 #include "Text.h"
