@@ -58,7 +58,7 @@ void MeshShader::Init(Render* render)
 	desc[1].SemanticIndex = 0;
 	desc[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 	desc[1].InputSlot = 0;
-	desc[1].AlignedByteOffset = 0;
+	desc[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 	desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	desc[1].InstanceDataStepRate = 0;
 
@@ -66,7 +66,7 @@ void MeshShader::Init(Render* render)
 	desc[2].SemanticIndex = 0;
 	desc[2].Format = DXGI_FORMAT_R32G32_FLOAT;
 	desc[2].InputSlot = 0;
-	desc[2].AlignedByteOffset = 0;
+	desc[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 	desc[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	desc[2].InstanceDataStepRate = 0;
 

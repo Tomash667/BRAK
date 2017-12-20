@@ -40,6 +40,7 @@ bool Game::Init()
 		scene->Init();
 
 		res_mgr = new ResourceManager(render);
+		res_mgr->Init();
 
 		auto node = new SceneNode;
 		node->mesh = res_mgr->GetMesh("cube.qmsh");

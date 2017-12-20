@@ -43,9 +43,13 @@ void Scene::Draw()
 		matView = Matrix::CreateLookAt(camera->from, camera->to, Vec3(0, 1, 0)),
 		matCombined;
 
+	static float r = 0;
+	r += 0.0001f;
+
 	for(auto node : nodes)
 	{
-		matWorld = Matrix::Translation(node->pos);
+		matWorld = Matrix::RotationY(r);
+		//matWorld = Matrix::Translation(node->pos);
 		matCombined = matWorld * matView * matProj;
 		shader->SetBuffer(matCombined);
 		shader->Draw(node->mesh);

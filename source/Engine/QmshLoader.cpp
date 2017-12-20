@@ -45,8 +45,12 @@ Mesh* QmshLoader::Load(cstring path)
 
 	// vertex buffer
 	uint size = sizeof(Vertex) * mesh->head.n_verts;
-	if(f.Ensure(size))
+	if(!f.Ensure(size))
 		throw "Failed to read vertex data.";
+
+	buf.resize(size);
+	f.Read(buf.data(), size);
+	Vertex* vd = (Vertex*)buf.data();
 
 	D3D11_BUFFER_DESC v_desc;
 	v_desc.Usage = D3D11_USAGE_DEFAULT;
@@ -56,30 +60,29 @@ Mesh* QmshLoader::Load(cstring path)
 	v_desc.MiscFlags = 0;
 	v_desc.StructureByteStride = 0;
 
-	HRESULT result = device->CreateBuffer(&v_desc, nullptr, &mesh->vb);
+	D3D11_SUBRESOURCE_DATA v_data;
+	v_data.pSysMem = buf.data();
+
+	HRESULT result = device->CreateBuffer(&v_desc, &v_data, &mesh->vb);
 	if(FAILED(result))
 		throw Format("Failed to create vertex buffer (%u).", result);
-
-	D3D11_MAPPED_SUBRESOURCE data;
-	context->Map(mesh->vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
-	f.Read(data.pData, size);
-	context->Unmap(mesh->vb, 0);
-
+	
 	// index buffer
 	size = sizeof(word) * mesh->head.n_tris * 3;
 	if(!f.Ensure(size))
 		throw "Failed to read index data.";
 
+	buf.resize(size);
+	f.Read(buf.data(), size);
+	word* id = (word*)buf.data();
+
 	v_desc.ByteWidth = size;
 	v_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	v_data.pSysMem = buf.data();
 
-	result = device->CreateBuffer(&v_desc, nullptr, &mesh->ib);
+	result = device->CreateBuffer(&v_desc, &v_data, &mesh->ib);
 	if(FAILED(result))
 		throw Format("Failed to create index buffer (%u).", result);
-
-	context->Map(mesh->ib, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
-	f.Read(data.pData, size);
-	context->Unmap(mesh->ib, 0);
 
 	// submeshes
 	string filename;
