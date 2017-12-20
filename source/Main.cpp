@@ -5,7 +5,9 @@
 int main()
 {
 	Game* game = new Game;
+	bool ok = true;
 	if(!game->Run())
-		return 1;
-	return 0;
+		ok = false;
+	delete game;
+	return ok ? 0 : 1;
 }

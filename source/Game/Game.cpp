@@ -8,6 +8,7 @@
 #include "SceneNode.h"
 #include "Camera.h"
 #include "InputManager.h"
+#include "Timer.h"
 
 #include <conio.h>
 
@@ -42,9 +43,10 @@ bool Game::Init()
 		res_mgr = new ResourceManager(render);
 		res_mgr->Init();
 
-		auto node = new SceneNode;
+		node = new SceneNode;
 		node->mesh = res_mgr->GetMesh("cube.qmsh");
 		node->pos = Vec3(0, 0, 0);
+		node->rot = Vec3(0, 0, 0);
 		scene->Add(node);
 
 		auto camera = scene->GetCamera();
@@ -64,8 +66,11 @@ bool Game::Init()
 
 void Game::Loop()
 {
+	Timer timer;
 	while(window->Tick())
 	{
+		float dt = timer.Tick();
+		node->rot.y += dt;
 		if(input->Down(Key::Escape))
 			break;
 		scene->Draw();

@@ -17,4 +17,6 @@ private:
 	Scene* scene;
 	ResourceManager* res_mgr;
 	InputManager* input;
+
+	SceneNode* node;
 };

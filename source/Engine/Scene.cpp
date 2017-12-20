@@ -21,6 +21,8 @@ Scene::Scene(Render* render) : render(render)
 
 Scene::~Scene()
 {
+	for(auto node : nodes)
+		delete node;
 	delete camera;
 	delete shader;
 }
@@ -43,13 +45,9 @@ void Scene::Draw()
 		matView = Matrix::CreateLookAt(camera->from, camera->to, Vec3(0, 1, 0)),
 		matCombined;
 
-	static float r = 0;
-	r += 0.0001f;
-
 	for(auto node : nodes)
 	{
-		matWorld = Matrix::RotationY(r);
-		//matWorld = Matrix::Translation(node->pos);
+		matWorld = Matrix::Rotation(node->rot) * Matrix::Translation(node->pos);
 		matCombined = matWorld * matView * matProj;
 		shader->SetBuffer(matCombined);
 		shader->Draw(node->mesh);

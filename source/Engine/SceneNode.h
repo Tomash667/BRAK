@@ -5,5 +5,5 @@ struct Mesh;
 struct SceneNode
 {
 	Mesh* mesh;
-	Vec3 pos;
+	Vec3 pos, rot;
 };

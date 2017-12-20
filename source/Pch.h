@@ -9,6 +9,10 @@
 #	define _HAS_ITERATOR_DEBUGGING 0
 #endif
 
+#ifdef _DEBUG
+#	include <vld.h>
+#endif
+
 #include <algorithm>
 #include <cassert>
 #include <vector>
