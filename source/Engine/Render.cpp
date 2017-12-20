@@ -13,37 +13,39 @@ struct Globals
 	Vec4 color;
 };
 
-Render::Render(Window* window) : window(window)
+Render::Render(Window* window) : window(window), device(nullptr), context(nullptr), swap_chain(nullptr), render_target(nullptr), depth_stencil_view(nullptr),
+raster_state(nullptr)
 {
 	assert(window);
 }
 
 Render::~Render()
 {
-	m_rasterState->Release();
-	m_layout->Release();
-	m_vertexBuffer->Release();
-	globals->Release();
-	m_pixelShader->Release();
-	m_vertexShader->Release();
-	m_depthStencilView->Release();
-	render_target->Release();
-	swap_chain->Release();
-	context->Release();
+	if(raster_state)
+		raster_state->Release();
+	if(depth_stencil_view)
+		depth_stencil_view->Release();
+	if(render_target)
+		render_target->Release();
+	if(swap_chain)
+		swap_chain->Release();
+	if(context)
+		context->Release();
 
+	if(device)
+	{
+		/*#ifdef _DEBUG
+			ID3D11Debug* debug;
+			device->QueryInterface(__uuidof(ID3D11Debug), (void**)&debug);
+			if(debug)
+			{
+				debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+				debug->Release();
+			}
+		#endif*/
 
-//#ifdef _DEBUG
-//	ID3D11Debug* debug;
-//	device->QueryInterface(__uuidof(ID3D11Debug), (void**)&debug);
-//	if(debug)
-//	{
-//		debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-//		debug->Release();
-//	}
-//#endif
-
-
-	device->Release();
+		device->Release();
+	}
 }
 
 void Render::Init()
@@ -51,29 +53,9 @@ void Render::Init()
 	CreateDeviceAndSwapChain();
 	CreateRenderTargetView();
 	CreateDepthStencilView();
-
-	context->OMSetRenderTargets(1, &render_target, m_depthStencilView);
-
-	CompileShaders();
-	CreateCbuffer();
-	CreateModel();
+	context->OMSetRenderTargets(1, &render_target, depth_stencil_view);
 	SetViewport();
-
-	D3D11_RASTERIZER_DESC rasterDesc;
-	rasterDesc.AntialiasedLineEnable = false;
-	rasterDesc.CullMode = D3D11_CULL_NONE; //D3D11_CULL_BACK;
-	rasterDesc.DepthBias = 0;
-	rasterDesc.DepthBiasClamp = 0.0f;
-	rasterDesc.DepthClipEnable = true;
-	rasterDesc.FillMode = D3D11_FILL_SOLID;
-	rasterDesc.FrontCounterClockwise = false;
-	rasterDesc.MultisampleEnable = false;
-	rasterDesc.ScissorEnable = false;
-	rasterDesc.SlopeScaledDepthBias = 0.0f;
-
-	// Create the rasterizer state from the description we just filled out.
-	/*result =*/ device->CreateRasterizerState(&rasterDesc, &m_rasterState);
-	context->RSSetState(m_rasterState);
+	CreateRasterState();
 }
 
 void Render::CreateDeviceAndSwapChain()
@@ -89,11 +71,12 @@ void Render::CreateDeviceAndSwapChain()
 	if(FAILED(result))
 	throw Format("Failed to create IDXGIAdapter (%u).", result);*/
 
+	auto& wnd_size = window->GetSize();
 
 	DXGI_SWAP_CHAIN_DESC swap_desc = { 0 };
 	swap_desc.BufferCount = 1;
-	swap_desc.BufferDesc.Width = 1024;
-	swap_desc.BufferDesc.Height = 768;
+	swap_desc.BufferDesc.Width = wnd_size.x;
+	swap_desc.BufferDesc.Height = wnd_size.y;
 	swap_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	/*if(m_vsync_enabled)
@@ -164,11 +147,13 @@ void Render::CreateDepthStencilView()
 {
 	HRESULT result;
 
+	auto& wnd_size = window->GetSize();
+
 	// create depth buffer texture
 	D3D11_TEXTURE2D_DESC depthBufferDesc = { 0 };
 	// Set up the description of the depth buffer.
-	depthBufferDesc.Width = 1024;
-	depthBufferDesc.Height = 768;
+	depthBufferDesc.Width = wnd_size.x;
+	depthBufferDesc.Height = wnd_size.y;
 	depthBufferDesc.MipLevels = 1;
 	depthBufferDesc.ArraySize = 1;
 	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -228,42 +213,11 @@ void Render::CreateDepthStencilView()
 	depthStencilViewDesc.Texture2D.MipSlice = 0;
 
 	// Create the depth stencil view.
-	result = device->CreateDepthStencilView(m_depthStencilBuffer, &depthStencilViewDesc, &m_depthStencilView);
+	result = device->CreateDepthStencilView(m_depthStencilBuffer, &depthStencilViewDesc, &depth_stencil_view);
 	if(FAILED(result))
 		throw Format("Failed to create depth stencil view (%u).", result);
 
 	m_depthStencilBuffer->Release();
-}
-
-void Render::CompileShaders()
-{
-	auto vertexShaderBuf = CompileShader("simple.hlsl", "vs_simple", true);
-	auto pixelShaderBuf = CompileShader("simple.hlsl", "ps_simple", false);
-
-	HRESULT result = device->CreateVertexShader(vertexShaderBuf->GetBufferPointer(), vertexShaderBuf->GetBufferSize(), nullptr, &m_vertexShader);
-	if(FAILED(result))
-		throw Format("Failed to create vertex shader (%u).", result);
-
-	result = device->CreatePixelShader(pixelShaderBuf->GetBufferPointer(), pixelShaderBuf->GetBufferSize(), nullptr, &m_pixelShader);
-	if(FAILED(result))
-		throw Format("Failed to create pixel shader (%u).", result);
-
-
-	D3D11_INPUT_ELEMENT_DESC desc[1];
-	desc[0].SemanticName = "POSITION";
-	desc[0].SemanticIndex = 0;
-	desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	desc[0].InputSlot = 0;
-	desc[0].AlignedByteOffset = 0;
-	desc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-	desc[0].InstanceDataStepRate = 0;
-
-	result = device->CreateInputLayout(desc, 1, vertexShaderBuf->GetBufferPointer(), vertexShaderBuf->GetBufferSize(), &m_layout);
-	if(FAILED(result))
-		throw Format("Failed to create input layout (%u).", result);
-
-	vertexShaderBuf->Release();
-	pixelShaderBuf->Release();
 }
 
 ID3DBlob* Render::CompileShader(cstring filename, cstring function, bool vertex)
@@ -307,59 +261,13 @@ ID3DBlob* Render::CompileShader(cstring filename, cstring function, bool vertex)
 	return shaderBlob;
 }
 
-void Render::CreateCbuffer()
-{
-	D3D11_BUFFER_DESC desc;
-
-	desc.Usage = D3D11_USAGE_DYNAMIC;
-	desc.ByteWidth = sizeof(Globals);
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	desc.MiscFlags = 0;
-	desc.StructureByteStride = 0;
-
-	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
-	HRESULT result = device->CreateBuffer(&desc, NULL, &globals);
-	if(FAILED(result))
-		throw Format("Failed to create buffer (%u).", result);
-}
-
-struct Vertex
-{
-	Vec3 pos;
-};
-
-void Render::CreateModel()
-{
-	Vertex v[3] = {
-		Vec3(-1.f, -1.f, 0.f),
-		Vec3(0.f, 1.f, 0.f),
-		Vec3(1.f, -1.f, 0.f)
-	};
-
-	D3D11_BUFFER_DESC v_desc;
-	v_desc.Usage = D3D11_USAGE_DEFAULT;
-	v_desc.ByteWidth = sizeof(v);
-	v_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	v_desc.CPUAccessFlags = 0;
-	v_desc.MiscFlags = 0;
-	v_desc.StructureByteStride = 0;
-
-	D3D11_SUBRESOURCE_DATA v_data;
-	v_data.pSysMem = v;
-	v_data.SysMemPitch = 0;
-	v_data.SysMemSlicePitch = 0;
-
-	HRESULT result = device->CreateBuffer(&v_desc, &v_data, &m_vertexBuffer);
-	if(FAILED(result))
-		throw Format("Failed to create vertex buffer (%u).", result);
-}
-
 void Render::SetViewport()
 {
+	auto& wnd_size = window->GetSize();
+
 	D3D11_VIEWPORT viewport;
-	viewport.Width = 1024.f;
-	viewport.Height = 768.f;
+	viewport.Width = (float)wnd_size.x;
+	viewport.Height = (float)wnd_size.y;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	viewport.TopLeftX = 0.0f;
@@ -368,54 +276,23 @@ void Render::SetViewport()
 	context->RSSetViewports(1, &viewport);
 }
 
-RNG _RNG;
-
-void Render::Draw()
+void Render::CreateRasterState()
 {
-	float color[4];
+	D3D11_RASTERIZER_DESC rasterDesc;
+	rasterDesc.AntialiasedLineEnable = false;
+	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.DepthBias = 0;
+	rasterDesc.DepthBiasClamp = 0.0f;
+	rasterDesc.DepthClipEnable = true;
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.FrontCounterClockwise = false;
+	rasterDesc.MultisampleEnable = false;
+	rasterDesc.ScissorEnable = false;
+	rasterDesc.SlopeScaledDepthBias = 0.0f;
 
-	static float r = 0.f;
-	r += 0.0001f;
+	HRESULT result = device->CreateRasterizerState(&rasterDesc, &raster_state);
+	if(FAILED(result))
+		throw Format("Failed to create resterizer state (%u).", result);
 
-	// Setup the color to clear the buffer to.
-	color[0] = 0;
-	color[1] = 0.5f;
-	color[2] = 1;
-	color[3] = 1;
-
-	// Clear the back buffer.
- 	context->ClearRenderTargetView(render_target, color);
-	context->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.f, 0);
-	// D3D11_CLEAR_STENCIL
-
-	Matrix matWorld = Matrix::RotationY(r),
-		matProj = Matrix::CreatePerspectiveFieldOfView(PI / 4, 1024.f / 768.f, 0.1f, 100.f),
-		matView = Matrix::CreateLookAt(Vec3(0, 0, -3), Vec3(0, 0, 0), Vec3(0, 1, 0));
-
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	HRESULT result = context->Map(globals, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	Globals& g = *(Globals*)mappedResource.pData;
-	g.matWorldViewProj = (matWorld * matView * matProj).Transpose();
-	g.color = Vec4(1, 0.3f, 0, 1);
-	context->Unmap(globals, 0);
-
-	context->VSSetConstantBuffers(0, 1, &globals);
-	context->PSSetConstantBuffers(0, 1, &globals);
-	context->IASetInputLayout(m_layout);
-
-
-	context->VSSetShader(m_vertexShader, nullptr, 0);
-	context->PSSetShader(m_pixelShader, nullptr, 0);
-
-	uint stride = sizeof(Vertex),
-		offset = 0;
-	context->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->Draw(3, 0);
-
-
-	bool m_vsync_enabled = false;
-
-	swap_chain->Present(m_vsync_enabled ? 1 : 0, 0);
+	context->RSSetState(raster_state);
 }

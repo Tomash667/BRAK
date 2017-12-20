@@ -62,15 +62,15 @@ Texture* ResourceManager::GetTexture(const string& id)
 	size_t len;
 	mbstowcs_s(&len, path_w, path, MAX_PATH);
 
-	ID3D11Resource* resource;
-	HRESULT result = CreateWICTextureFromFile(render->GetDevice(), render->GetContext(), path_w, &resource, nullptr);
+	ID3D11ShaderResourceView* view;
+	HRESULT result = CreateWICTextureFromFile(render->GetDevice(), render->GetContext(), path_w, nullptr, &view);
 	if(FAILED(result))
 		throw Format("Failed to load texture '%s' (%u).", id.c_str(), result);
 
 	auto tex = new Texture;
 	tex->name = id;
 	tex->type = Resource::Texture;
-	tex->tex = resource;
+	tex->tex = view;
 	resources.insert(tex);
 
 	return tex;

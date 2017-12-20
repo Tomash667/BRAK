@@ -12,6 +12,7 @@ FileReader::~FileReader()
 	{
 		CloseHandle(file);
 		file = INVALID_HANDLE_VALUE;
+		ok = false;
 	}
 }
 
@@ -20,13 +21,24 @@ bool FileReader::Open(cstring filename)
 	assert(filename);
 	file = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	own_handle = true;
-	return (file != INVALID_HANDLE_VALUE);
+	if(file != INVALID_HANDLE_VALUE)
+	{
+		size = GetFileSize(file, nullptr);
+		ok = true;
+	}
+	else
+	{
+		size = 0;
+		ok = false;
+	}
+	return ok;
 }
 
 bool FileReader::Read(void* ptr, uint size)
 {
 	ReadFile(file, ptr, size, &tmp, nullptr);
-	return size == tmp;
+	ok = (size == tmp);
+	return ok;
 }
 
 void FileReader::ReadToString(string& s)
@@ -37,19 +49,15 @@ void FileReader::ReadToString(string& s)
 	assert(size == tmp);
 }
 
-void FileReader::Skip(uint bytes)
+bool FileReader::Skip(uint bytes)
 {
-	SetFilePointer(file, bytes, nullptr, FILE_CURRENT);
+	ok = (ok && SetFilePointer(file, bytes, nullptr, FILE_CURRENT) != INVALID_SET_FILE_POINTER);
+	return ok;
 }
 
-bool FileReader::Ensure(uint size)
+uint FileReader::GetPos() const
 {
-
-}
-
-uint FileReader::GetSize() const
-{
-	return GetFileSize(file, nullptr);
+	return (uint)SetFilePointer(file, 0, nullptr, FILE_CURRENT);
 }
 
 

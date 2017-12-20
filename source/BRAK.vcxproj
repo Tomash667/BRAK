@@ -164,6 +164,7 @@
     <ClCompile Include="Core\Text.cpp" />
     <ClCompile Include="Engine\InputManager.cpp" />
     <ClCompile Include="Engine\Mesh.cpp" />
+    <ClCompile Include="Engine\MeshShader.cpp" />
     <ClCompile Include="Engine\QmshLoader.cpp" />
     <ClCompile Include="Engine\Render.cpp" />
     <ClCompile Include="Engine\ResourceManager.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="Engine\InputManager.h" />
     <ClInclude Include="Engine\Key.h" />
     <ClInclude Include="Engine\Mesh.h" />
+    <ClInclude Include="Engine\MeshShader.h" />
     <ClInclude Include="Engine\QmshLoader.h" />
     <ClInclude Include="Engine\Render.h" />
     <ClInclude Include="Engine\Resource.h" />

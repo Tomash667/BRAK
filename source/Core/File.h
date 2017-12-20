@@ -8,15 +8,15 @@ const HANDLE INVALID_HANDLE_VALUE = (HANDLE)(IntPointer)-1;
 class FileReader
 {
 public:
-	FileReader() : file(INVALID_HANDLE_VALUE), own_handle(false)
+	FileReader() : file(INVALID_HANDLE_VALUE), own_handle(false), ok(false)
 	{
 	}
 
-	explicit FileReader(HANDLE file) : file(file), own_handle(false)
+	explicit FileReader(HANDLE file) : file(file), own_handle(false), ok(false)
 	{
 	}
 
-	explicit FileReader(cstring filename) : own_handle(true)
+	explicit FileReader(cstring filename)
 	{
 		Open(filename);
 	}
@@ -26,19 +26,26 @@ public:
 	bool Open(cstring filename);
 	bool Read(void* ptr, uint size);
 	void ReadToString(string& s);
-	void Skip(uint size);
-	bool Ensure(uint size);
-	uint GetSize() const;
+	bool Skip(uint size);
+	uint GetSize() const { return size; }
+	uint GetPos() const;
 
-	bool IsOpen() const
+	bool Ensure(uint elements_size) const
 	{
-		return file != INVALID_HANDLE_VALUE;
+		auto pos = GetPos();
+		uint offset;
+		return ok && checked::add(pos, elements_size, offset) && offset <= size;
+	}
+	bool Ensure(uint count, uint element_size) const
+	{
+		auto pos = GetPos();
+		uint offset;
+		return ok && checked::mad(count, element_size, pos, offset) && offset <= size;
 	}
 
-	operator bool() const
-	{
-		return file != INVALID_HANDLE_VALUE;
-	}
+	bool IsOpen() const { return file != INVALID_HANDLE_VALUE; }
+	bool IsOk() const { return ok; }
+	operator bool() const { return IsOk(); }
 
 	template<typename T>
 	bool operator >> (T& a)
@@ -86,9 +93,9 @@ public:
 	}*/
 
 	template<typename T>
-	void Skip()
+	bool Skip()
 	{
-		Skip(sizeof(T));
+		return Skip(sizeof(T));
 	}
 
 	bool ReadString1(string& s)
@@ -136,7 +143,8 @@ public:
 
 private:
 	HANDLE file;
-	bool own_handle;
+	uint size;
+	bool own_handle, ok;
 };
 
 //-----------------------------------------------------------------------------

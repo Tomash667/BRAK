@@ -140,6 +140,28 @@ inline T Chance(int chance_a, int chance_b, int chance_c, T a, T b, T c)
 }
 
 //-----------------------------------------------------------------------------
+namespace checked
+{
+	inline bool add(uint a, uint b, uint& result)
+	{
+		uint64 r = (uint64)a + b;
+		if(r > std::numeric_limits<uint>::max())
+			return false;
+		result = (uint)r;
+		return true;
+	}
+
+	inline bool mad(uint a, uint b, uint c, uint& result)
+	{
+		uint64 r = (uint64)a * b + c;
+		if(r > std::numeric_limits<uint>::max())
+			return false;
+		result = (uint)r;
+		return true;
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Math functions
 //-----------------------------------------------------------------------------
 // Clamp value to range

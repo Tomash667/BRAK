@@ -2,9 +2,9 @@
 
 #include "Resource.h"
 
-struct ID3D11Resource;
+struct ID3D11ShaderResourceView;
 
 struct Texture : Resource
 {
-	ID3D11Resource* tex;
+	ID3D11ShaderResourceView* tex;
 };

@@ -70,6 +70,9 @@
     <ClInclude Include="Core\File.h">
       <Filter>1. Core</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\MeshShader.h">
+      <Filter>2. Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
@@ -108,6 +111,9 @@
       <Filter>1. Core</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Mesh.cpp">
+      <Filter>2. Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\MeshShader.cpp">
       <Filter>2. Engine</Filter>
     </ClCompile>
   </ItemGroup>

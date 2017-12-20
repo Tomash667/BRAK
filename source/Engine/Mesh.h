@@ -126,4 +126,5 @@ struct Mesh : Resource
 	Header head;
 	ID3D11Buffer* vb;
 	ID3D11Buffer* ib;
+	vector<Submesh> subs;
 };

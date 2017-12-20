@@ -3,7 +3,6 @@
 #include "ResourceManager.h"
 #include "QmshLoader.h"
 #include "Mesh.h"
-
 #include <d3d11.h>
 
 QmshLoader::QmshLoader(ResourceManager* res_mgr, ID3D11Device* device, ID3D11DeviceContext* context) : res_mgr(res_mgr), device(device), context(context)
@@ -41,7 +40,7 @@ Mesh* QmshLoader::Load(cstring path)
 		if(mesh->head.n_groups == 0)
 			throw "No bone groups.";
 	}
-	if(IS_SET(mesh->head.flags, Mesh::F_PHYSICS | Mesh::F_ANIMATED | Mesh::F_TANGENTS))
+	if(IS_SET(mesh->head.flags, Mesh::F_PHYSICS | Mesh::F_ANIMATED | Mesh::F_TANGENTS || Mesh::F_SPLIT) || mesh->head.n_points > 0)
 		throw Format("Not implemented mesh flags used (%u).", mesh->head.flags);
 
 	// vertex buffer
@@ -56,7 +55,7 @@ Mesh* QmshLoader::Load(cstring path)
 	v_desc.CPUAccessFlags = 0;
 	v_desc.MiscFlags = 0;
 	v_desc.StructureByteStride = 0;
-	
+
 	HRESULT result = device->CreateBuffer(&v_desc, nullptr, &mesh->vb);
 	if(FAILED(result))
 		throw Format("Failed to create vertex buffer (%u).", result);
@@ -82,10 +81,62 @@ Mesh* QmshLoader::Load(cstring path)
 	f.Read(data.pData, size);
 	context->Unmap(mesh->ib, 0);
 
+	// submeshes
+	string filename;
+	if(!f.Ensure(mesh->head.n_subs, Mesh::Submesh::MIN_SIZE))
+		throw "Failed to read submesh data.";
+	mesh->subs.resize(mesh->head.n_subs);
+	uint index = 0;
+	for(auto& sub : mesh->subs)
+	{
+		f >> sub.first;
+		f >> sub.tris;
+		f >> sub.min_ind;
+		f >> sub.n_ind;
+		f >> sub.name;
+		f >> filename;
 
+		if(!filename.empty())
+			sub.tex = res_mgr->GetTexture(filename);
+		else
+			sub.tex = nullptr;
 
-	//if(mesh->head.n_splits)
-	//	throw "Mesh splits are unsupported.";
+		// specular value
+		f >> sub.specular_color;
+		f >> sub.specular_intensity;
+		f >> sub.specular_hardness;
+
+		// normalmap
+		if(IS_SET(mesh->head.flags, Mesh::F_TANGENTS))
+		{
+			f >> filename;
+			if(!filename.empty())
+			{
+				sub.tex_normal = res_mgr->GetTexture(filename);
+				f >> sub.normal_factor;
+			}
+			else
+				sub.tex_normal = nullptr;
+		}
+		else
+			sub.tex_normal = nullptr;
+
+		// specular map
+		f >> filename;
+		if(!filename.empty())
+		{
+			sub.tex_specular = res_mgr->GetTexture(filename);
+			f >> sub.specular_factor;
+			f >> sub.specular_color_factor;
+		}
+		else
+			sub.tex_specular = nullptr;
+
+		if(!f)
+			throw Format("Failed to read submesh %u.", index);
+
+		++index;
+	}
 
 	return mesh.Pin();
 }

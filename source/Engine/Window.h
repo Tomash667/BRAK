@@ -11,6 +11,7 @@ public:
 	void Init();
 	bool Tick();
 	Handle GetHandle() { return hwnd; }
+	const Int2& GetSize() const { return size; }
 	void SetTitle(cstring title);
 
 private:

@@ -13,11 +13,14 @@
 
 bool Game::Run()
 {
-	if(!Init())
-		return false;
-	Loop();
+	bool ok = false;
+	if(Init())
+	{
+		ok = true;
+		Loop();
+	}
 	Shutdown();
-	return true;
+	return ok;
 }
 
 bool Game::Init()
@@ -34,6 +37,8 @@ bool Game::Init()
 		render->Init();
 
 		scene = new Scene(render);
+		scene->Init();
+
 		res_mgr = new ResourceManager(render);
 
 		auto node = new SceneNode;
@@ -62,12 +67,16 @@ void Game::Loop()
 	{
 		if(input->Down(Key::Escape))
 			break;
-		render->Draw();
+		scene->Draw();
 		input->Update();
 	}
 }
 
 void Game::Shutdown()
 {
+	delete res_mgr;
+	delete scene;
 	delete render;
+	delete window;
+	delete input;
 }
