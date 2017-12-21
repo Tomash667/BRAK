@@ -12,6 +12,15 @@ struct Vertex
 	Vec2 tex;
 };
 
+struct AniVertex
+{
+	Vec3 pos;
+	float weights;
+	uint indices;
+	Vec3 normal;
+	Vec2 tex;
+};
+
 struct Mesh : Resource
 {
 	enum MESH_FLAGS
@@ -96,6 +105,7 @@ struct Mesh : Resource
 		static const uint MIN_SIZE = 7;
 
 		int GetFrameIndex(float time, bool& hit);
+		void GetKeyframeData(uint bone, float time, KeyframeBone& keyframe);
 	};
 
 	struct Point
@@ -122,9 +132,18 @@ struct Mesh : Resource
 
 	Mesh();
 	~Mesh();
+	void SetupBoneMatrices();
+	Animation* GetAnimation(cstring name);
+	Bone* GetBone(cstring name);
+	Point* GetPoint(cstring name);
 
 	Header head;
 	ID3D11Buffer* vb;
 	ID3D11Buffer* ib;
 	vector<Submesh> subs;
+	vector<Bone> bones;
+	vector<Animation> anims;
+	vector<Point> attach_points;
+	vector<BoneGroup> groups;
+	vector<Matrix> model_to_bone;
 };

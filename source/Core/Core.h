@@ -83,14 +83,29 @@ namespace internal
 	template<typename T>
 	struct StandardAllocator : IAllocator<T>
 	{
-		T* Create()
+		T* Create() override
 		{
 			return AllocateHelper<T>::Allocate();
 		}
 
-		void Destroy(T* item)
+		void Destroy(T* item) override
 		{
 			delete item;
+		}
+	};
+
+	template<typename T>
+	struct ComAllocator : IAllocator<T>
+	{
+		T* Create() override
+		{
+			return nullptr;
+		}
+
+		void Destroy(T* item) override
+		{
+			if(item)
+				item->Release();
 		}
 	};
 }
@@ -152,6 +167,9 @@ private:
 	T* ptr;
 	Allocator allocator;
 };
+
+template<typename T>
+using ComPtr = Ptr<T, internal::ComAllocator<T>>;
 
 //-----------------------------------------------------------------------------
 #include "CoreMath.h"

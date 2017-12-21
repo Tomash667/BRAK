@@ -40,17 +40,23 @@ Mesh* QmshLoader::Load(cstring path)
 		if(mesh->head.n_groups == 0)
 			throw "No bone groups.";
 	}
-	if(IS_SET(mesh->head.flags, Mesh::F_PHYSICS | Mesh::F_ANIMATED | Mesh::F_TANGENTS || Mesh::F_SPLIT) || mesh->head.n_points > 0)
+	if(IS_SET(mesh->head.flags, Mesh::F_PHYSICS | Mesh::F_TANGENTS || Mesh::F_SPLIT))
 		throw Format("Not implemented mesh flags used (%u).", mesh->head.flags);
 
+	// set vertex size
+	uint vertex_size;
+	if(IS_SET(mesh->head.flags, Mesh::F_ANIMATED))
+		vertex_size = sizeof(AniVertex);
+	else
+		vertex_size = sizeof(Vertex);
+
 	// vertex buffer
-	uint size = sizeof(Vertex) * mesh->head.n_verts;
+	uint size = vertex_size * mesh->head.n_verts;
 	if(!f.Ensure(size))
 		throw "Failed to read vertex data.";
 
 	buf.resize(size);
 	f.Read(buf.data(), size);
-	Vertex* vd = (Vertex*)buf.data();
 
 	D3D11_BUFFER_DESC v_desc;
 	v_desc.Usage = D3D11_USAGE_DEFAULT;
@@ -66,7 +72,7 @@ Mesh* QmshLoader::Load(cstring path)
 	HRESULT result = device->CreateBuffer(&v_desc, &v_data, &mesh->vb);
 	if(FAILED(result))
 		throw Format("Failed to create vertex buffer (%u).", result);
-	
+
 	// index buffer
 	size = sizeof(word) * mesh->head.n_tris * 3;
 	if(!f.Ensure(size))
@@ -74,7 +80,6 @@ Mesh* QmshLoader::Load(cstring path)
 
 	buf.resize(size);
 	f.Read(buf.data(), size);
-	word* id = (word*)buf.data();
 
 	v_desc.ByteWidth = size;
 	v_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -139,6 +144,135 @@ Mesh* QmshLoader::Load(cstring path)
 			throw Format("Failed to read submesh %u.", index);
 
 		++index;
+	}
+
+	// animation data
+	if(IS_SET(mesh->head.flags, Mesh::F_ANIMATED) && !IS_SET(mesh->head.flags, Mesh::F_STATIC))
+	{
+		// bones
+		size = Mesh::Bone::MIN_SIZE * mesh->head.n_bones;
+		if(!f.Ensure(size))
+			throw "Failed to read bones.";
+		mesh->bones.resize(mesh->head.n_bones + 1);
+
+		// zero bone
+		Mesh::Bone& zero_bone = mesh->bones[0];
+		zero_bone.parent = 0;
+		zero_bone.name = "zero";
+		zero_bone.id = 0;
+		zero_bone.mat = Matrix::IdentityMatrix;
+
+		for(byte i = 1; i <= mesh->head.n_bones; ++i)
+		{
+			Mesh::Bone& bone = mesh->bones[i];
+
+			bone.id = i;
+			f.Read(bone.parent);
+
+			f.Read(bone.mat._11);
+			f.Read(bone.mat._12);
+			f.Read(bone.mat._13);
+			bone.mat._14 = 0;
+			f.Read(bone.mat._21);
+			f.Read(bone.mat._22);
+			f.Read(bone.mat._23);
+			bone.mat._24 = 0;
+			f.Read(bone.mat._31);
+			f.Read(bone.mat._32);
+			f.Read(bone.mat._33);
+			bone.mat._34 = 0;
+			f.Read(bone.mat._41);
+			f.Read(bone.mat._42);
+			f.Read(bone.mat._43);
+			bone.mat._44 = 1;
+
+			f.Read(bone.name);
+
+			mesh->bones[bone.parent].childs.push_back(i);
+		}
+
+		if(!f)
+			throw "Failed to read bones data.";
+
+		// animations
+		size = Mesh::Animation::MIN_SIZE * mesh->head.n_anims;
+		if(!f.Ensure(size))
+			throw "Failed to read animations.";
+		mesh->anims.resize(mesh->head.n_anims);
+
+		for(byte i = 0; i < mesh->head.n_anims; ++i)
+		{
+			Mesh::Animation& anim = mesh->anims[i];
+
+			f.Read(anim.name);
+			f.Read(anim.length);
+			f.Read(anim.n_frames);
+
+			size = anim.n_frames * (4 + sizeof(Mesh::KeyframeBone) * mesh->head.n_bones);
+			if(!f.Ensure(size))
+				throw Format("Failed to read animation %u data.", i);
+
+			anim.frames.resize(anim.n_frames);
+
+			for(word j = 0; j < anim.n_frames; ++j)
+			{
+				f.Read(anim.frames[j].time);
+				anim.frames[j].bones.resize(mesh->head.n_bones);
+				f.Read(anim.frames[j].bones.data(), sizeof(Mesh::KeyframeBone) * mesh->head.n_bones);
+			}
+		}
+
+		// add zero bone to count
+		++mesh->head.n_bones;
+	}
+
+	// load points
+	size = Mesh::Point::MIN_SIZE * mesh->head.n_points;
+	if(!f.Ensure(size))
+		throw "Failed to read points.";
+	mesh->attach_points.clear();
+	mesh->attach_points.resize(mesh->head.n_points);
+	for(word i = 0; i < mesh->head.n_points; ++i)
+	{
+		Mesh::Point& p = mesh->attach_points[i];
+
+		f.Read(p.name);
+		f.Read(p.mat);
+		f.Read(p.bone);
+		f.Read(p.type);
+		f.Read(p.size);
+		f.Read(p.rot);
+		p.rot.y = Clip(-p.rot.y);
+	}
+
+	// bone groups
+	if(IS_SET(mesh->head.flags, Mesh::F_ANIMATED) && !IS_SET(mesh->head.flags, Mesh::F_STATIC))
+	{
+		if(!f.Ensure(Mesh::BoneGroup::MIN_SIZE * mesh->head.n_groups))
+			throw "Failed to read bone groups.";
+		mesh->groups.resize(mesh->head.n_groups);
+		for(word i = 0; i < mesh->head.n_groups; ++i)
+		{
+			Mesh::BoneGroup& gr = mesh->groups[i];
+
+			f.Read(gr.name);
+
+			// parent group
+			f.Read(gr.parent);
+			assert(gr.parent < mesh->head.n_groups);
+			assert(gr.parent != i || i == 0);
+
+			// bone indexes
+			byte count;
+			f.Read(count);
+			gr.bones.resize(count);
+			f.Read(gr.bones.data(), gr.bones.size());
+		}
+
+		if(!f)
+			throw "Failed to read bone groups data.";
+
+		mesh->SetupBoneMatrices();
 	}
 
 	return mesh.Pin();

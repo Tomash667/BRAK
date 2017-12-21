@@ -6,6 +6,7 @@
 #include "Render.h"
 #include "Window.h"
 #include "MeshShader.h"
+#include "MeshInstance.h"
 #include <d3d11.h>
 
 Scene::Scene(Render* render) : render(render)
@@ -36,8 +37,6 @@ void Scene::Draw()
 {
 	BeginScene();
 
-	shader->SetParams();
-
 	auto& wnd_size = render->GetWindow()->GetSize();
 
 	Matrix matWorld,
@@ -49,7 +48,19 @@ void Scene::Draw()
 	{
 		matWorld = Matrix::Rotation(node->rot) * Matrix::Translation(node->pos);
 		matCombined = matWorld * matView * matProj;
-		shader->SetBuffer(matCombined);
+
+		if(node->mesh_inst)
+		{
+			node->mesh_inst->SetupBones();
+			shader->SetParams(true);
+			shader->SetBuffer(matCombined, &node->mesh_inst->mat_bones);
+		}
+		else
+		{
+			shader->SetParams(false);
+			shader->SetBuffer(matCombined, nullptr);
+		}
+
 		shader->Draw(node->mesh);
 	}
 
