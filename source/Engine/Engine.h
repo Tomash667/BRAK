@@ -6,4 +6,5 @@ class ResourceManager;
 class Scene;
 class Window;
 
+struct Camera;
 struct SceneNode;

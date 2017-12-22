@@ -9,7 +9,11 @@ public:
 
 private:
 	bool Init();
+	void InitEngine();
+	void InitGame();
 	void Loop();
+	bool UpdateGame(float dt);
+	void SetCamera();
 	void Shutdown();
 
 	Window* window;
@@ -18,5 +22,7 @@ private:
 	ResourceManager* res_mgr;
 	InputManager* input;
 
-	SceneNode* node;
+	Camera* camera;
+	SceneNode* player;
+	bool moving = false;
 };

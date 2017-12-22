@@ -29,33 +29,10 @@ bool Game::Init()
 {
 	try
 	{
-		input = new InputManager;
+		InitEngine();
+		InitGame();
 
-		window = new Window(input);
-		window->SetTitle("BRAK");
-		window->Init();
 
-		render = new Render(window);
-		render->Init();
-
-		scene = new Scene(render);
-		scene->Init();
-
-		res_mgr = new ResourceManager(render);
-		res_mgr->Init();
-
-		auto mesh_inst = new MeshInstance(res_mgr->GetMesh("human.qmsh"));
-		mesh_inst->Play("idzie", 0, 0);
-
-		node = new SceneNode;
-		node->SetMesh(mesh_inst);
-		node->pos = Vec3(0, 0, 0);
-		node->rot = Vec3(0, 0, 0);
-		scene->Add(node);
-
-		auto camera = scene->GetCamera();
-		camera->from = Vec3(-5, 5, -5);
-		camera->to = Vec3(0, 0, 0);
 
 		return true;
 	}
@@ -68,19 +45,111 @@ bool Game::Init()
 	}
 }
 
+void Game::InitEngine()
+{
+	input = new InputManager;
+
+	window = new Window(input);
+	window->SetTitle("BRAK");
+	window->Init();
+
+	render = new Render(window);
+	render->Init();
+
+	scene = new Scene(render);
+	scene->Init();
+	camera = scene->GetCamera();
+
+	res_mgr = new ResourceManager(render);
+	res_mgr->Init();
+}
+
+void Game::InitGame()
+{
+	auto floor = new SceneNode;
+	floor->SetMesh(res_mgr->GetMesh("floor.qmsh"));
+	floor->pos = Vec3(0, 0, 0);
+	floor->rot = Vec3(0, 0, 0);
+	scene->Add(floor);
+
+	auto mesh_inst = new MeshInstance(res_mgr->GetMesh("human.qmsh"));
+	mesh_inst->Play("stoi", 0, 0);
+
+	player = new SceneNode;
+	player->SetMesh(mesh_inst);
+	player->pos = Vec3(0, 0, 0);
+	player->rot = Vec3(0, 0, 0);
+	scene->Add(player);
+	moving = false;
+
+	SetCamera();
+}
+
 void Game::Loop()
 {
 	Timer timer;
 	while(window->Tick())
 	{
 		float dt = timer.Tick();
-		node->rot.y += dt;
-		node->mesh_inst->Update(dt);
-		if(input->Down(Key::Escape))
+
+		if(!UpdateGame(dt))
 			break;
+
 		scene->Draw();
 		input->Update();
 	}
+}
+
+bool Game::UpdateGame(float dt)
+{
+	if(input->Down(Key::Escape))
+		return false;
+
+	int move = 0;
+	if(input->Down(Key::W))
+		move += 10;
+	if(input->Down(Key::S))
+		move -= 10;
+	if(input->Down(Key::A))
+		move -= 1;
+	if(input->Down(Key::D))
+		move += 1;
+
+	if(move == 0)
+	{
+		if(moving)
+		{
+			moving = false;
+			player->mesh_inst->Play("stoi", 0, 0);
+		}
+	}
+	else
+	{
+		if(!moving)
+		{
+			moving = true;
+			player->mesh_inst->Play("biegnie", 0, 0);
+		}
+
+		float dir;
+		switch(move)
+		{
+		default:
+		case 10:
+			dir = PI;
+			break;
+		}
+	}
+
+	player->mesh_inst->Update(dt);
+
+	return true;
+}
+
+void Game::SetCamera()
+{
+	camera->from = Vec3(-5, 5, -5);
+	camera->to = Vec3(0, 0, 0);
 }
 
 void Game::Shutdown()
