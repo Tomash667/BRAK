@@ -3,6 +3,10 @@
 #include "Mesh.h"
 #include <d3d11.h>
 
+
+const Mesh::KeyframeBone Mesh::KeyframeBone::Zero = { Vec3::Zero, Quat::Identity, 1.f };
+
+
 Mesh::Mesh() : vb(nullptr), ib(nullptr)
 {
 
@@ -121,4 +125,12 @@ void Mesh::KeyframeBone::Interpolate(Mesh::KeyframeBone& out, const Mesh::Keyfra
 	out.rot = Quat::Slerp(k.rot, k2.rot, t);
 	out.pos = Vec3::Lerp(k.pos, k2.pos, t);
 	out.scale = Lerp(k.scale, k2.scale, t);
+}
+
+void Mesh::KeyframeBone::Mix(Matrix& out, const Matrix& mul) const
+{
+	out = Matrix::Scale(scale)
+		* Matrix::Rotation(rot)
+		* Matrix::Translation(pos)
+		* mul;
 }

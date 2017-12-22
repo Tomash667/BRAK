@@ -87,6 +87,8 @@ struct Mesh : Resource
 
 		void Mix(Matrix& out, const Matrix& mul) const;
 		static void Interpolate(KeyframeBone& out, const KeyframeBone& k, const KeyframeBone& k2, float t);
+
+		static const KeyframeBone Zero;
 	};
 
 	struct Keyframe

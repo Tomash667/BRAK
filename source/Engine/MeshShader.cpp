@@ -77,7 +77,7 @@ void MeshShader::InitAnimatedMeshShader()
 	D3D11_INPUT_ELEMENT_DESC desc[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "BLENDINDICES", 0, DXGI_FORMAT_R16G16_SINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "BLENDINDICES", 0, DXGI_FORMAT_R8G8B8A8_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
@@ -149,7 +149,7 @@ void MeshShader::SetBuffer(const Matrix& matWorldViewProj, const vector<Matrix>*
 	{
 		AniBuffer& b = *(AniBuffer*)mappedResource.pData;
 		b.matWorldViewProj = matWorldViewProj.Transpose();
-		for(uint i = 0, count = matBones->size(); i < count; ++i)
+		for(size_t i = 0, count = matBones->size(); i < count; ++i)
 			b.matBones[i] = matBones->at(i).Transpose();
 	}
 	else
@@ -171,6 +171,6 @@ void MeshShader::Draw(Mesh* mesh)
 	for(auto& sub : mesh->subs)
 	{
 		context->PSSetShaderResources(0, 1, sub.tex ? &sub.tex->tex : nullptr);
-		context->DrawIndexed(sub.tris * 3, sub.min_ind, 0);
+		context->DrawIndexed(sub.tris * 3, sub.first * 3, sub.min_ind);
 	}
 }

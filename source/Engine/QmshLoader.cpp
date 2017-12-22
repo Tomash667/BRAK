@@ -266,7 +266,7 @@ Mesh* QmshLoader::Load(cstring path)
 			byte count;
 			f.Read(count);
 			gr.bones.resize(count);
-			f.Read(gr.bones.data(), gr.bones.size());
+			f.Read(gr.bones.data(), (uint)gr.bones.size());
 		}
 
 		if(!f)

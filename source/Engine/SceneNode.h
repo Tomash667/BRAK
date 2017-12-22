@@ -11,7 +11,7 @@ struct SceneNode
 	}
 	void SetMesh(MeshInstance* mesh_inst)
 	{
-		this->mesh = mesh_inst->mesh;
+		this->mesh = mesh_inst->GetMesh();
 		this->mesh_inst = mesh_inst;
 	}
 

@@ -23,7 +23,10 @@ Scene::Scene(Render* render) : render(render)
 Scene::~Scene()
 {
 	for(auto node : nodes)
+	{
+		delete node->mesh_inst;
 		delete node;
+	}
 	delete camera;
 	delete shader;
 }
@@ -53,7 +56,7 @@ void Scene::Draw()
 		{
 			node->mesh_inst->SetupBones();
 			shader->SetParams(true);
-			shader->SetBuffer(matCombined, &node->mesh_inst->mat_bones);
+			shader->SetBuffer(matCombined, &node->mesh_inst->GetMatrixBones());
 		}
 		else
 		{

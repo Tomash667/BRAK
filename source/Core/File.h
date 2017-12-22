@@ -67,6 +67,12 @@ public:
 		return Read(&a, sizeof(a));
 	}
 
+	template<>
+	bool Read(string& s)
+	{
+		return ReadString1(s);
+	}
+
 	template<typename T, typename T2>
 	bool ReadCasted(T2& a)
 	{
