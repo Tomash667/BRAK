@@ -42,3 +42,15 @@ void InputManager::Update()
 		keystate[(int)k] = IS_RELEASED;
 	to_release.clear();
 }
+
+void InputManager::ReleaseKeys()
+{
+	for(uint i = 0; i < 255; ++i)
+	{
+		if(keystate[i] & 0x2)
+			keystate[i] = IS_RELEASED;
+	}
+	//for(uint i = 0; i < 5; ++i)
+	//	doubleclk[i] = false;
+	to_release.clear();
+}

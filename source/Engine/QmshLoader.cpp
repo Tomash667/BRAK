@@ -25,9 +25,9 @@ Mesh* QmshLoader::Load(cstring path)
 		throw "Failed to read mesh header.";
 	if(memcmp(mesh->head.format, "QMSH", 4) != 0)
 		throw Format("Invalid file signature '%.4s'.", mesh->head.format);
-	if(mesh->head.version < 12 || mesh->head.version > 20)
+	if(mesh->head.version < 12 || mesh->head.version > 21)
 		throw Format("Invalid mesh version '%u'.", mesh->head.version);
-	if(mesh->head.version < 20)
+	if(mesh->head.version < 21)
 		throw Format("Unsupported mesh version '%u'.", mesh->head.version);
 	if(mesh->head.n_bones >= 32)
 		throw Format("Too many bones (%u).", mesh->head.n_bones);
@@ -155,7 +155,6 @@ Mesh* QmshLoader::Load(cstring path)
 			throw "Failed to read bones.";
 		mesh->bones.resize(mesh->head.n_bones + 1);
 
-		// zero bone
 		Mesh::Bone& zero_bone = mesh->bones[0];
 		zero_bone.parent = 0;
 		zero_bone.name = "zero";
@@ -191,63 +190,15 @@ Mesh* QmshLoader::Load(cstring path)
 			mesh->bones[bone.parent].childs.push_back(i);
 		}
 
+		// add zero bone to counter
+		uint real_bones = mesh->head.n_bones;
+		mesh->head.n_bones++;
+
 		if(!f)
 			throw "Failed to read bones data.";
 
-		// animations
-		size = Mesh::Animation::MIN_SIZE * mesh->head.n_anims;
-		if(!f.Ensure(size))
-			throw "Failed to read animations.";
-		mesh->anims.resize(mesh->head.n_anims);
 
-		for(byte i = 0; i < mesh->head.n_anims; ++i)
-		{
-			Mesh::Animation& anim = mesh->anims[i];
-
-			f.Read(anim.name);
-			f.Read(anim.length);
-			f.Read(anim.n_frames);
-
-			size = anim.n_frames * (4 + sizeof(Mesh::KeyframeBone) * mesh->head.n_bones);
-			if(!f.Ensure(size))
-				throw Format("Failed to read animation %u data.", i);
-
-			anim.frames.resize(anim.n_frames);
-
-			for(word j = 0; j < anim.n_frames; ++j)
-			{
-				f.Read(anim.frames[j].time);
-				anim.frames[j].bones.resize(mesh->head.n_bones);
-				f.Read(anim.frames[j].bones.data(), sizeof(Mesh::KeyframeBone) * mesh->head.n_bones);
-			}
-		}
-
-		// add zero bone to count
-		++mesh->head.n_bones;
-	}
-
-	// load points
-	size = Mesh::Point::MIN_SIZE * mesh->head.n_points;
-	if(!f.Ensure(size))
-		throw "Failed to read points.";
-	mesh->attach_points.clear();
-	mesh->attach_points.resize(mesh->head.n_points);
-	for(word i = 0; i < mesh->head.n_points; ++i)
-	{
-		Mesh::Point& p = mesh->attach_points[i];
-
-		f.Read(p.name);
-		f.Read(p.mat);
-		f.Read(p.bone);
-		f.Read(p.type);
-		f.Read(p.size);
-		f.Read(p.rot);
-		p.rot.y = Clip(-p.rot.y);
-	}
-
-	// bone groups
-	if(IS_SET(mesh->head.flags, Mesh::F_ANIMATED) && !IS_SET(mesh->head.flags, Mesh::F_STATIC))
-	{
+		// bone groups
 		if(!f.Ensure(Mesh::BoneGroup::MIN_SIZE * mesh->head.n_groups))
 			throw "Failed to read bone groups.";
 		mesh->groups.resize(mesh->head.n_groups);
@@ -273,7 +224,54 @@ Mesh* QmshLoader::Load(cstring path)
 			throw "Failed to read bone groups data.";
 
 		mesh->SetupBoneMatrices();
+
+
+		// animations
+		size = Mesh::Animation::MIN_SIZE * mesh->head.n_anims;
+		if(!f.Ensure(size))
+			throw "Failed to read animations.";
+		mesh->anims.resize(mesh->head.n_anims);
+
+		for(byte i = 0; i < mesh->head.n_anims; ++i)
+		{
+			Mesh::Animation& anim = mesh->anims[i];
+
+			f.Read(anim.name);
+			f.Read(anim.length);
+			f.Read(anim.n_frames);
+
+			size = anim.n_frames * (4 + sizeof(Mesh::KeyframeBone) * real_bones);
+			if(!f.Ensure(size))
+				throw Format("Failed to read animation %u data.", i);
+
+			anim.frames.resize(anim.n_frames);
+
+			for(word j = 0; j < anim.n_frames; ++j)
+			{
+				f.Read(anim.frames[j].time);
+				anim.frames[j].bones.resize(real_bones);
+				f.Read(anim.frames[j].bones.data(), sizeof(Mesh::KeyframeBone) * real_bones);
+			}
+		}
 	}
 
+	// load points
+	size = Mesh::Point::MIN_SIZE * mesh->head.n_points;
+	if(!f.Ensure(size))
+		throw "Failed to read points.";
+	mesh->attach_points.clear();
+	mesh->attach_points.resize(mesh->head.n_points);
+	for(word i = 0; i < mesh->head.n_points; ++i)
+	{
+		Mesh::Point& p = mesh->attach_points[i];
+
+		f.Read(p.name);
+		f.Read(p.mat);
+		f.Read(p.bone);
+		f.Read(p.type);
+		f.Read(p.size);
+		f.Read(p.rot);
+	}
+	
 	return mesh.Pin();
 }

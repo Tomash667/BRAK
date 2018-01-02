@@ -14,9 +14,6 @@ Scene::Scene(Render* render) : render(render)
 	assert(render);
 
 	camera = new Camera;
-	camera->from = Vec3(5, 5, 5);
-	camera->to = Vec3::Zero;
-
 	shader = new MeshShader;
 }
 
@@ -44,9 +41,9 @@ void Scene::Draw()
 
 	Matrix matWorld,
 		matProj = Matrix::CreatePerspectiveFieldOfView(PI / 4, float(wnd_size.x) / wnd_size.y, 0.1f, 100.f),
-		matView = Matrix::CreateLookAt(camera->from, camera->to, Vec3(0, 1, 0)),
+		matView = camera->GetViewMatrix(),
 		matCombined;
-
+	
 	for(auto node : nodes)
 	{
 		matWorld = Matrix::Rotation(node->rot) * Matrix::Translation(node->pos);

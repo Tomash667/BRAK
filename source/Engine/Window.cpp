@@ -6,7 +6,8 @@
 
 #undef RegisterClass
 
-Window::Window(InputManager* input) : hwnd(nullptr), size(1024, 768), title("Window"), input(input)
+Window::Window(InputManager* input) : hwnd(nullptr), size(1024, 768), title("Window"), input(input), active(false), activation_point(-1,-1), fullscreen(false),
+replace_cursor(false), locked_cursor(true), cursor_visible(true), frames(0), frame_time(0), fps(0)
 {
 	assert(input);
 }
@@ -19,6 +20,9 @@ void Window::Init()
 	Center();
 
 	ShowWindow((HWND)hwnd, SW_SHOWNORMAL);
+	replace_cursor = true;
+	unlock_point = real_size / 2;
+	input->GetMouseMove() = Int2(0, 0);
 }
 
 bool Window::Tick()
@@ -34,7 +38,51 @@ bool Window::Tick()
 				return false;
 		}
 		else
+		{
+			//Sleep(1);
+
+			frames++;
+			frame_time += dt;
+			if(frame_time >= 1.f)
+			{
+				fps = frames / frame_time;
+				frames = 0;
+				frame_time = 0.f;
+				printf("Fps: %g", fps);
+			}
+
+			// update activity state
+			HWND foreground = GetForegroundWindow();
+			bool is_active = (foreground == (HWND)hwnd);
+			bool was_active = active;
+			UpdateActivity(is_active);
+
+			// handle cursor movement
+			auto& mouse_dif = input->GetMouseMove();
+			mouse_dif = Int2(0, 0);
+			if(active)
+			{
+				if(locked_cursor)
+				{
+					if(replace_cursor)
+						replace_cursor = false;
+					else if(was_active)
+					{
+						POINT pt;
+						GetCursorPos(&pt);
+						ScreenToClient((HWND)hwnd, &pt);
+						mouse_dif = Int2(pt.x, pt.y) - real_size / 2;
+						if(mouse_dif.x != 0)
+							printf("%d\n", mouse_dif.x);
+					}
+					PlaceCursor();
+				}
+			}
+			else if(!locked_cursor && lock_on_focus)
+				locked_cursor = true;
+
 			return true;
+		}
 	}
 }
 
@@ -80,14 +128,19 @@ void Window::RegisterClass()
 
 void Window::AdjustSize()
 {
-	Rect rect = Rect::Create(Int2(0, 0), size);
-	AdjustWindowRect((RECT*)&rect, WS_OVERLAPPEDWINDOW, false);
-	real_size = rect.Size();
+	if(!fullscreen)
+	{
+		Rect rect = Rect::Create(Int2(0, 0), size);
+		AdjustWindowRect((RECT*)&rect, WS_OVERLAPPEDWINDOW, false);
+		real_size = rect.Size();
+	}
+	else
+		real_size = size;
 }
 
 void Window::Create()
 {
-	auto hwnd = CreateWindowEx(0, "Krystal", title.c_str(), /*(mode == Fullscreen) ? WS_POPUPWINDOW :*/ WS_OVERLAPPEDWINDOW, 0, 0, real_size.x, real_size.y,
+	auto hwnd = CreateWindowEx(0, "Krystal", title.c_str(), fullscreen ? WS_POPUPWINDOW : WS_OVERLAPPEDWINDOW, 0, 0, real_size.x, real_size.y,
 		nullptr, nullptr, GetModuleHandle(nullptr), this);
 	if(!hwnd)
 		throw Format("Failed to create window (%d).", GetLastError());
@@ -117,7 +170,159 @@ IntPointer Window::HandleEvents(uint msg, IntPointer wParam, UIntPointer lParam)
 	case WM_KEYUP:
 		input->Process((Key)wParam, false);
 		return 0;
+	case WM_LBUTTONDOWN:
+	case WM_RBUTTONDOWN:
+	case WM_MBUTTONDOWN:
+	case WM_XBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONUP:
+	case WM_XBUTTONUP:
+		return ProcessMouseButton(msg);
+	case WM_MENUCHAR:
+		return MAKELRESULT(0, MNC_CLOSE);
 	default:
 		return DefWindowProc((HWND)hwnd, msg, wParam, lParam);
+	}
+}
+
+IntPointer Window::ProcessMouseButton(IntPointer wParam)
+{
+	IntPointer result;
+	Key key;
+	bool down;
+
+	// translate msg to key
+	switch(wParam)
+	{
+	case WM_LBUTTONDOWN:
+		result = 0;
+		key = Key::LeftButton;
+		down = true;
+		break;
+	case WM_LBUTTONUP:
+		result = 0;
+		key = Key::LeftButton;
+		down = false;
+		break;
+	case WM_RBUTTONDOWN:
+		result = 0;
+		key = Key::RightButton;
+		down = true;
+		break;
+	case WM_RBUTTONUP:
+		result = 0;
+		key = Key::RightButton;
+		down = false;
+		break;
+	case WM_MBUTTONDOWN:
+		result = 0;
+		key = Key::MiddleButton;
+		down = true;
+		break;
+	case WM_MBUTTONUP:
+		result = 0;
+		key = Key::MiddleButton;
+		down = false;
+		break;
+	case WM_XBUTTONDOWN:
+		result = TRUE;
+		key = (GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? Key::X1Button : Key::X2Button);
+		down = true;
+		break;
+	case WM_XBUTTONUP:
+		result = TRUE;
+		key = (GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? Key::X1Button : Key::X2Button);
+		down = false;
+		break;
+	}
+
+	// handle click activation
+	if((!locked_cursor || !active) && down && lock_on_focus)
+	{
+		ShowCursor(false);
+		Rect rect;
+		GetClientRect((HWND)hwnd, (RECT*)&rect);
+		Int2 wh = rect.Size();
+		POINT pt;
+		GetCursorPos(&pt);
+		ScreenToClient((HWND)hwnd, &pt);
+		activation_point = Int2(pt.x * size.x / wh.x, pt.y * size.y / wh.y);
+		PlaceCursor();
+
+		if(active)
+			locked_cursor = true;
+
+		return result;
+	}
+
+	// send to input
+	input->Process(key, down);
+	return result;
+}
+
+void Window::UpdateActivity(bool is_active)
+{
+	if(is_active == active)
+		return;
+	active = is_active;
+	if(active)
+	{
+		if(locked_cursor)
+		{
+			ShowCursor(false);
+			PlaceCursor();
+		}
+	}
+	else
+	{
+		ShowCursor(true);
+		input->ReleaseKeys();
+	}
+	//OnFocus(active, activation_point);
+	activation_point = Int2(-1, -1);
+}
+
+void Window::PlaceCursor()
+{
+	POINT p;
+	p.x = real_size.x / 2;
+	p.y = real_size.y / 2;
+	ClientToScreen((HWND)hwnd, &p);
+	SetCursorPos(p.x, p.y);
+}
+
+void Window::UnlockCursor(bool _lock_on_focus)
+{
+	lock_on_focus = _lock_on_focus;
+	if(!locked_cursor)
+		return;
+	locked_cursor = false;
+
+	if(!IsCursorVisible())
+	{
+		Rect rect;
+		GetClientRect((HWND)hwnd, (RECT*)&rect);
+		Int2 wh = rect.Size();
+		POINT pt;
+		pt.x = int(float(unlock_point.x)*wh.x / size.x);
+		pt.y = int(float(unlock_point.y)*wh.y / size.y);
+		ClientToScreen((HWND)hwnd, &pt);
+		SetCursorPos(pt.x, pt.y);
+	}
+
+	ShowCursor(true);
+}
+
+void Window::LockCursor()
+{
+	if(locked_cursor)
+		return;
+	lock_on_focus = true;
+	locked_cursor = true;
+	if(active)
+	{
+		ShowCursor(false);
+		PlaceCursor();
 	}
 }

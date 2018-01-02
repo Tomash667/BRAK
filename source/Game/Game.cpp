@@ -77,12 +77,22 @@ void Game::InitGame()
 
 	player = new SceneNode;
 	player->SetMesh(mesh_inst);
+	//player->SetMesh(res_mgr->GetMesh("human.qmsh"));
 	player->pos = Vec3(0, 0, 0);
-	player->rot = Vec3(0, 0, 0);
+	player->rot = Vec3(0, -PI / 2, 0);
 	scene->Add(player);
 	moving = false;
 
-	SetCamera();
+	camera->target = player;
+	camera->h = 1.5f;
+	camera->rot = Vec2(-PI / 2, 4.2875104f);
+	camera->vrot = camera->rot;
+
+	auto marker = new SceneNode;
+	marker->SetMesh(res_mgr->GetMesh("marker.qmsh"));
+	marker->pos = Vec3(0, 0, 0);
+	marker->rot = Vec3(0, 0, 0);
+	scene->Add(marker);
 }
 
 void Game::Loop()
@@ -102,7 +112,7 @@ void Game::Loop()
 
 bool Game::UpdateGame(float dt)
 {
-	if(input->Down(Key::Escape))
+	if(input->Down(Key::Escape) || (input->Down(Key::Alt) && input->Down(Key::F4)))
 		return false;
 
 	int move = 0;
@@ -141,15 +151,22 @@ bool Game::UpdateGame(float dt)
 		}
 	}
 
+	const float c_cam_angle_min = PI + 0.1f;
+	const float c_cam_angle_max = PI * 1.8f - 0.1f;
+
+	auto& mouse_dif = input->GetMouseMove();
+	//mouse_dif.x = -1;
+	camera->rot.x = Clip(camera->rot.x + float(mouse_dif.x) / 800);
+	//camera->rot.y -= float(mouse_dif.y) / 400;
+	if(camera->rot.y > c_cam_angle_max)
+		camera->rot.y = c_cam_angle_max;
+	if(camera->rot.y < c_cam_angle_min)
+		camera->rot.y = c_cam_angle_min;
+	camera->Update(dt);
+
 	player->mesh_inst->Update(dt);
 
 	return true;
-}
-
-void Game::SetCamera()
-{
-	camera->from = Vec3(-5, 5, -5);
-	camera->to = Vec3(0, 0, 0);
 }
 
 void Game::Shutdown()

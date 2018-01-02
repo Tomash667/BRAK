@@ -13,7 +13,6 @@ private:
 	void InitGame();
 	void Loop();
 	bool UpdateGame(float dt);
-	void SetCamera();
 	void Shutdown();
 
 	Window* window;

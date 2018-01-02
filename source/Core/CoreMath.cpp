@@ -39,3 +39,12 @@ const Matrix Matrix::IdentityMatrix = {
 const Quat Quat::Identity = { 0.f, 0.f, 0.f, 1.f };
 
 RNG _RNG;
+
+float ShortestArc(float a, float b)
+{
+	if(fabs(b - a) < PI)
+		return b - a;
+	if(b > a)
+		return b - a - PI * 2.0f;
+	return b - a + PI * 2.0f;
+}

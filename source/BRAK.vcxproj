@@ -165,6 +165,7 @@
     <ClCompile Include="Core\File.cpp" />
     <ClCompile Include="Core\Text.cpp" />
     <ClCompile Include="Core\Timer.cpp" />
+    <ClCompile Include="Engine\Camera.cpp" />
     <ClCompile Include="Engine\InputManager.cpp" />
     <ClCompile Include="Engine\Mesh.cpp" />
     <ClCompile Include="Engine\MeshInstance.cpp" />
@@ -212,6 +213,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\CoreMath.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\doc\info.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -2,7 +2,12 @@
 
 enum class Key
 {
-	None = 0,
+	None = 0x00,
+	LeftButton = 0x01,
+	RightButton = 0x02,
+	MiddleButton = 0x04,
+	X1Button = 0x05,
+	X2Button = 0x06,
 	Backspace = 0x08,
 	Tab = 0x09,
 	Enter = 0x0D,
