@@ -20,7 +20,8 @@ public:
 	Handle GetHandle() { return hwnd; }
 	const Int2& GetSize() const { return size; }
 
-	void SetTitle(cstring title);
+	void SetTitle(Cstring title);
+	void SetSize(const Int2& size);
 
 private:
 	void RegisterClass();
@@ -36,7 +37,5 @@ private:
 	Handle hwnd;
 	string title;
 	Int2 size, real_size, unlock_point, activation_point;
-	uint frames;
-	float frame_time, fps;
 	bool fullscreen, active, replace_cursor, locked_cursor, lock_on_focus, cursor_visible;
 };

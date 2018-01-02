@@ -7,7 +7,7 @@
 #undef RegisterClass
 
 Window::Window(InputManager* input) : hwnd(nullptr), size(1024, 768), title("Window"), input(input), active(false), activation_point(-1,-1), fullscreen(false),
-replace_cursor(false), locked_cursor(true), cursor_visible(true), frames(0), frame_time(0), fps(0)
+replace_cursor(false), locked_cursor(true), cursor_visible(true)
 {
 	assert(input);
 }
@@ -41,15 +41,7 @@ bool Window::Tick()
 		{
 			//Sleep(1);
 
-			frames++;
-			frame_time += dt;
-			if(frame_time >= 1.f)
-			{
-				fps = frames / frame_time;
-				frames = 0;
-				frame_time = 0.f;
-				printf("Fps: %g", fps);
-			}
+
 
 			// update activity state
 			HWND foreground = GetForegroundWindow();
@@ -86,12 +78,21 @@ bool Window::Tick()
 	}
 }
 
-void Window::SetTitle(cstring new_title)
+void Window::SetTitle(Cstring new_title)
 {
-	assert(new_title);
 	title = new_title;
 	if(hwnd)
 		SetWindowText((HWND)hwnd, new_title);
+}
+
+void Window::SetSize(const Int2& new_size)
+{
+	if(size == new_size)
+		return;
+
+	assert(hwnd == nullptr); // todo change after creating window
+
+	size = new_size;
 }
 
 void Window::RegisterClass()

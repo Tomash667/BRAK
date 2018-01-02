@@ -166,6 +166,7 @@
     <ClCompile Include="Core\Text.cpp" />
     <ClCompile Include="Core\Timer.cpp" />
     <ClCompile Include="Engine\Camera.cpp" />
+    <ClCompile Include="Engine\Engine.cpp" />
     <ClCompile Include="Engine\InputManager.cpp" />
     <ClCompile Include="Engine\Mesh.cpp" />
     <ClCompile Include="Engine\MeshInstance.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="Core\Timer.h" />
     <ClInclude Include="Engine\Camera.h" />
     <ClInclude Include="Engine\Engine.h" />
+    <ClInclude Include="Engine\EngineHandler.h" />
     <ClInclude Include="Engine\InputManager.h" />
     <ClInclude Include="Engine\Key.h" />
     <ClInclude Include="Engine\Mesh.h" />

@@ -1,22 +1,25 @@
 #pragma once
 
 #include "Engine.h"
+#include "EngineHandler.h"
 
-class Game
+struct Camera;
+struct SceneNode;
+
+class Game : public EngineHandler
 {
 public:
+	Game();
+	~Game();
 	bool Run();
 
 private:
 	bool Init();
 	void InitEngine();
 	void InitGame();
-	void Loop();
-	bool UpdateGame(float dt);
-	void Shutdown();
+	void OnUpdate(float dt) override;
 
-	Window* window;
-	Render* render;
+	Engine* engine;
 	Scene* scene;
 	ResourceManager* res_mgr;
 	InputManager* input;
